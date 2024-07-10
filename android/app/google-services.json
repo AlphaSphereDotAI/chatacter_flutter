@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "535987886392",
+    "project_id": "chatacter",
+    "storage_bucket": "chatacter.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:535987886392:android:23f36de9fba39f552389cd",
+        "android_client_info": {
+          "package_name": "com.AlphaSphereDotAI.Chatacter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjIpVJBPpYSaYexe0UUs5BZasvg4mIzws"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:535987886392:android:177a2bf02105e0642389cd",
+        "android_client_info": {
+          "package_name": "com.alphasphere.chatacter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjIpVJBPpYSaYexe0UUs5BZasvg4mIzws"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
