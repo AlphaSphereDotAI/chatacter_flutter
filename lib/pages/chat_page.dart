@@ -32,7 +32,7 @@ class _ChatPageState extends State<ChatPage> {
   late String currentUserId;
   late String currentUserName;
 
-  late LLM _llm;
+  LLM? _llm; // Initialize LLM as nullable
   List<Map<String, String>> chatHistory = [];
 
   FilePickerResult? _filePickerResult;
@@ -41,7 +41,8 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     currentUserId =
         Provider.of<UserDataProvider>(context, listen: false).getUserId;
-    Provider.of<UserDataProvider>(context, listen: false).getUserName;
+    currentUserName =
+        Provider.of<UserDataProvider>(context, listen: false).getUserName;
     Provider.of<ChatProvider>(context, listen: false).loadChats(currentUserId);
     super.initState();
   }
@@ -84,14 +85,10 @@ class _ChatPageState extends State<ChatPage> {
                         receiver: receiver.id,
                         timestamp: DateTime.now(),
                         isSeenByReceiver: false,
-                        isImage: false,
+                        isImage: true,
                       ),
                       currentUserId,
                       [UserData(phone: "", id: currentUserId), receiver]);
-                  // sendNotificationtoOtherUser(
-                  //     notificationTitle: '$currentUserName sent you an image',
-                  //     notificationBody: "check it out.",
-                  //     deviceToken: receiver.deviceToken!);
                 }
               });
             }
@@ -104,14 +101,16 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _sendMessageToLLM({required UserData receiver}) async {
-    chatHistory = [
-      {
-        "role": "system",
-        "content":
-            "You are ${AiCharacters.characters[receiver.id]}. Respond to the user's questions and comments as ${AiCharacters.characters[receiver.id]} would, without explicitly stating that you are ${AiCharacters.characters[receiver.id]}. use very short sentences."
-      }
-    ];
-    _llm = LLM();
+    if (_llm == null) {
+      _llm = LLM(); // Initialize LLM if not already initialized
+      chatHistory = [
+        {
+          "role": "assistant",
+          "content":
+              "You are ${receiver.name} ${receiver.lastName} and you are in a text chatting room. Respond to the user's questions and comments as ${receiver.name} ${receiver.lastName} would, without explicitly stating that you are ${receiver.name} ${receiver.lastName}. Use very very short sentences. Be polite and don't be rude."
+        }
+      ];
+    }
 
     if (messageController.text.isNotEmpty) {
       setState(() {
@@ -138,7 +137,8 @@ class _ChatPageState extends State<ChatPage> {
         });
       });
 
-      final responseContent = await _llm.sendPostRequest(chatHistory);
+      final responseContent = await _llm!.sendPostRequest(chatHistory);
+      print('Here Response Content: ${responseContent}');
       setState(() {
         chatHistory.add({"role": "assistant", "content": responseContent});
 
@@ -158,14 +158,13 @@ class _ChatPageState extends State<ChatPage> {
                     isSeenByReceiver: false),
                 receiver.id,
                 [receiver, UserData(phone: '', id: currentUserId)]);
-            messageController.clear();
           }
         });
       });
     }
   }
 
-  //to send a text messages
+  // to send a text message
   void _sendMessage({required UserData receiver}) {
     if (messageController.text.isNotEmpty) {
       setState(() {
@@ -254,8 +253,7 @@ class _ChatPageState extends State<ChatPage> {
             title: Row(
               children: [
                 CircleAvatar(
-                  backgroundImage: receiver.profilePicture == null ||
-                          receiver.profilePicture == null
+                  backgroundImage: receiver.profilePicture == null
                       ? Image.asset(AppIcons.userIcon).image
                       : CachedNetworkImageProvider(
                           'https://cloud.appwrite.io/v1/storage/buckets/6683247c00056fdd9ceb/files/${receiver.profilePicture}/view?project=667d37b30023f69f7f74&mode=admin'),
@@ -408,7 +406,12 @@ class _ChatPageState extends State<ChatPage> {
                     Expanded(
                       child: TextField(
                         onSubmitted: (value) {
-                          _sendMessage(receiver: receiver);
+                          if (AiCharacters.charactersIds
+                              .contains(receiver.id.toString().trim())) {
+                            _sendMessageToLLM(receiver: receiver);
+                          } else {
+                            _sendMessage(receiver: receiver);
+                          }
                         },
                         controller: messageController,
                         decoration: const InputDecoration(

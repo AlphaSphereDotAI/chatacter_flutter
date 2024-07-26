@@ -185,7 +185,11 @@ Future<UserData?> getUserDetails({required String userId}) async {
     Provider.of<UserDataProvider>(navigatorKey.currentContext!, listen: false)
         .setUserLastName(response.data['last_name'] ?? '');
     Provider.of<UserDataProvider>(navigatorKey.currentContext!, listen: false)
+        .setUserBirthday(response.data['birthday'] ?? '');
+    Provider.of<UserDataProvider>(navigatorKey.currentContext!, listen: false)
         .setUserLocation(response.data['location'] ?? '');
+    Provider.of<UserDataProvider>(navigatorKey.currentContext!, listen: false)
+        .setUserGender(response.data['gender'] ?? '');
     Provider.of<UserDataProvider>(navigatorKey.currentContext!, listen: false)
         .setUserProfilePicture(response.data['profile_picture'] ?? '');
 

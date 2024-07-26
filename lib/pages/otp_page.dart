@@ -27,7 +27,8 @@ class _OtpPageState extends State<OtpPage> {
 
   void handleOtpSubmit(BuildContext context, String userId) {
     if (_formKey1.currentState!.validate()) {
-      loginWithOtp(otp: _otpController.text, userId: userId).then((value) {
+      loginWithOtp(otp: _otpController.text, userId: userId)
+          .then((value) async {
         if (value) {
           //Setting and saving data locally
           Provider.of<UserDataProvider>(context, listen: false)
@@ -35,10 +36,20 @@ class _OtpPageState extends State<OtpPage> {
           Provider.of<UserDataProvider>(context, listen: false)
               .setUserPhone(countryCode + _phoneNumberController.text);
 
-          Navigator.of(context).pushNamedAndRemoveUntil(
-              AppRoutes.editProfile, (route) => false,
-              arguments: {'title': 'add'});
           print("Right OTP..............");
+          await Provider.of<UserDataProvider>(context, listen: false)
+              .loadUserData(userId);
+
+          if (Provider.of<UserDataProvider>(context, listen: false)
+                  .getUserName ==
+              '') {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+                AppRoutes.editProfile, (route) => false,
+                arguments: {'title': 'add'});
+          } else {
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
+          }
         } else {
           ScaffoldMessenger.of(context)
               .showSnackBar(SnackBar(content: Text(AppStrings.loginFailed)));

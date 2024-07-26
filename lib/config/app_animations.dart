@@ -1,6 +1,7 @@
 class AppAnimations {
-  static const _mp4 = "assets/animation/";
+  static const _characters = "assets/animation/";
 
-  static const albert_talking = "${_mp4}albert/talking.mp4";
-  static const albert_silent = "${_mp4}albert/silent.mp4";
+  static const albertTalking = "${_characters}albert/talking.mp4";
+  static const albertSilent = "${_characters}albert/silent.mp4";
+  static const albertImage = "${_characters}albert/albert.png";
 }

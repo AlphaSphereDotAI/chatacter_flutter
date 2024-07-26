@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:chatacter/characters/characters.dart';
 import 'package:chatacter/characters/llm.dart';
 
 class VoiceCallPage extends StatefulWidget {
@@ -22,7 +21,7 @@ class _VoiceCallPageState extends State<VoiceCallPage> {
   final FlutterTts flutterTts = FlutterTts();
   final SpeechToText _speechToText = SpeechToText();
   bool _isSpeaking = false;
-  late LLM _llm;
+  LLM? _llm;
   List<Map<String, String>> chatHistory = [];
   String receiverId = 'dc57f5a807524d09ba6d';
   Timer? _activityTimer; // Timer to check activity
@@ -37,7 +36,9 @@ class _VoiceCallPageState extends State<VoiceCallPage> {
 
   @override
   void dispose() {
-    _activityTimer?.cancel(); // Cancel the timer when the widget is disposed
+    _stopListening(); // Ensure listening is stopped
+    _cancelSpeaking(); // Ensure speaking is stopped
+    _activityTimer?.cancel(); // Cancel the timer
     super.dispose();
   }
 
@@ -52,24 +53,33 @@ class _VoiceCallPageState extends State<VoiceCallPage> {
 
   void _startActivityTimer() {
     _activityTimer = Timer.periodic(Duration(seconds: 5), (timer) {
-      _checkActivity();
+      if (mounted) {
+        _checkActivity();
+      }
     });
   }
 
   void _checkActivity() {
     if (!_speechToText.isListening && !_isSpeaking) {
-      _handleSpokenText("what are your plans fpr today");
+      _handleSpokenText("*I speak with low voice and you can't hear me*");
     }
   }
 
   void _startListening() {
-    _speechToText.listen(onResult: _onSpeechResult);
-    setState(() {});
+    _speechToText.listen(
+        onResult: _onSpeechResult, listenFor: Duration(seconds: 5));
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _stopListening() {
-    _speechToText.stop();
-    setState(() {});
+    if (_speechToText.isListening) {
+      _speechToText.stop();
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   void _onSpeechResult(SpeechRecognitionResult result) {
@@ -80,28 +90,36 @@ class _VoiceCallPageState extends State<VoiceCallPage> {
   }
 
   Future<void> _handleSpokenText(String text) async {
+    if (!mounted) return; // Check if the widget is still mounted
     _stopListening();
     String responseText = await _getLLMResponse(text);
+    chatHistory.add({"role": "assistant", "content": responseText});
     await _speak(responseText);
   }
 
   Future<String> _getLLMResponse(String prompt) async {
-    chatHistory = [
-      {
-        "role": "system",
+    UserData receiver = ModalRoute.of(context)!.settings.arguments as UserData;
+    if (_llm == null) {
+      _llm = LLM(); // Initialize LLM if not already initialized
+      chatHistory.add({
+        "role": "assistant",
         "content":
-            "You are ${AiCharacters.characters[receiverId]}. Respond to the user's questions and comments as ${AiCharacters.characters[receiverId]} would, without explicitly stating that you are ${AiCharacters.characters[receiverId]}. Use short sentences, be polite."
-      }
-    ];
-    _llm = LLM();
-    final response = await _llm.sendPostRequest(chatHistory);
+            "You are ${receiver.name} ${receiver.lastName} and you are in a voice chat. Respond to the user's questions and comments as ${receiver.name} ${receiver.lastName} would, without explicitly stating that you are ${receiver.name} ${receiver.lastName}. Use very very short sentences. Be polite and don't be rude."
+      });
+    }
+    chatHistory.add({
+      "role": "user",
+      "content": prompt,
+    });
 
+    final response = await _llm!.sendPostRequest(chatHistory);
     return response;
   }
 
   Future<void> _speak(String text) async {
+    if (!mounted) return; // Check if the widget is still mounted
     await flutterTts.setLanguage('en-US');
-    await flutterTts.setPitch(0.6);
+    await flutterTts.setPitch(0.5);
     await flutterTts.speak(text);
 
     flutterTts.getVoices.then((data) {
@@ -109,34 +127,43 @@ class _VoiceCallPageState extends State<VoiceCallPage> {
         List<Map> _voices = List<Map>.from(data);
         _voices =
             _voices.where((_voice) => _voice['name'].contains('en')).toList();
-        // print(_voices);
-        setState(() {
-          _CurrentVoice = _voices[10]; //7,
-          print('_CurrentVoice: ${_CurrentVoice}');
-          flutterTts.setVoice({
-            'name': _CurrentVoice!['name'],
-            'locale': _CurrentVoice!['locale']
+        if (mounted) {
+          setState(() {
+            _CurrentVoice = _voices[10]; //7,
+            print('_CurrentVoice: ${_CurrentVoice}');
+            flutterTts.setVoice({
+              'name': _CurrentVoice!['name'],
+              'locale': _CurrentVoice!['locale']
+            });
           });
-        });
+        }
       } catch (e) {}
     });
 
-    setState(() {
-      _isSpeaking = true;
-    });
-    flutterTts.setCompletionHandler(() {
+    if (mounted) {
       setState(() {
-        _isSpeaking = false;
-        _startListening();
+        _isSpeaking = true;
       });
+    }
+    flutterTts.setCompletionHandler(() {
+      if (mounted) {
+        setState(() {
+          _isSpeaking = false;
+          _startListening();
+        });
+      }
     });
   }
 
   void _cancelSpeaking() async {
-    await flutterTts.stop();
-    setState(() {
-      _isSpeaking = false;
-    });
+    if (_isSpeaking) {
+      await flutterTts.stop();
+      if (mounted) {
+        setState(() {
+          _isSpeaking = false;
+        });
+      }
+    }
   }
 
   @override
@@ -188,9 +215,11 @@ class _VoiceCallPageState extends State<VoiceCallPage> {
                     child: Center(
                       child: IconButton(
                         onPressed: () {
-                          _cancelSpeaking();
-                          _stopListening();
-                          Navigator.pop(context);
+                          if (mounted) {
+                            _cancelSpeaking();
+                            _stopListening();
+                            Navigator.pop(context);
+                          }
                         },
                         icon: Icon(Icons.call),
                         color: Colors.white, // Icon color

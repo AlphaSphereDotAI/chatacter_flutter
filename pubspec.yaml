@@ -59,6 +59,7 @@ dependencies:
   speech_to_text: ^6.6.2
   avatar_glow: ^3.0.1
   video_player: ^2.9.1
+  audio_session: ^0.1.21
 
 dev_dependencies:
   flutter_test:

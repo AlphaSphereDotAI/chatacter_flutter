@@ -43,7 +43,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _locationKey = GlobalKey<FormState>();
   final _birthdayKey = GlobalKey<FormState>();
 
-  bool _isDataLoaded = false;
+  // bool _isDataLoaded = false;
 
   @override
   void initState() {
@@ -53,30 +53,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final userDataProvider =
           Provider.of<UserDataProvider>(context, listen: false);
       userId = userDataProvider.getUserId;
-      userDataProvider.loadUserData(userId!);
+      // userDataProvider.loadUserData(userId!);
       imageId = userDataProvider.getUserProfilePicture;
-
-      // Listen for changes in the user data
-      userDataProvider.addListener(() {
-        if (!_isDataLoaded) {
-          setState(() {
-            _isDataLoaded = true;
-            switch (userDataProvider.getUserGender.toLowerCase()) {
-              case 'male':
-                gender = Gender.male;
-                break;
-              case 'female':
-                gender = Gender.female;
-                break;
-              case 'other':
-                gender = Gender.other;
-                break;
-              default:
-                gender = Gender.none;
-            }
-          });
-        }
-      });
     });
   }
 
@@ -156,6 +134,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }
       if (_phoneNumberController.text.isEmpty) {
         _phoneNumberController.text = value.getUserPhone;
+      }
+      if (gender == Gender.none) {
+        switch (value.getUserGender) {
+          case 'male':
+            gender = Gender.male;
+            break;
+          case 'female':
+            gender = Gender.female;
+            break;
+          case 'other':
+            gender = Gender.other;
+            break;
+          default:
+            gender = Gender.none;
+        }
       }
 
       return Scaffold(

@@ -7,6 +7,7 @@ class LLM {
 
   Future<String> sendPostRequest(List<Map<String, String>> chatHistory) async {
     try {
+      print('Chat History: ${chatHistory}');
       final url = Uri.parse('https://api.groq.com/openai/v1/chat/completions');
       final headers = {
         'Authorization': 'Bearer $_apiKey',
@@ -18,6 +19,7 @@ class LLM {
       });
 
       final response = await http.post(url, headers: headers, body: body);
+      print('Response Here!!!: ${response}');
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
