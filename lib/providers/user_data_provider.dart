@@ -7,7 +7,7 @@ class UserDataProvider extends ChangeNotifier {
   String _userId = '';
   String _userName = '';
   String _userLastName = '';
-  String _userBirthday = '';
+  DateTime? _userBirthday;
   String _userLocation = '';
   String _userGender = '';
   String _userPhone = '';
@@ -17,7 +17,7 @@ class UserDataProvider extends ChangeNotifier {
   String get getUserId => _userId;
   String get getUserName => _userName;
   String get getUserLastName => _userLastName;
-  String get getUserBirthday => _userBirthday;
+  DateTime? get getUserBirthday => _userBirthday;
   String get getUserLocation => _userLocation;
   String get getUserGender => _userGender;
   String get getUserPhone => _userPhone;
@@ -29,7 +29,7 @@ class UserDataProvider extends ChangeNotifier {
     _userId = LocalSavedData.getUserId();
     _userName = LocalSavedData.getUserName();
     _userLastName = LocalSavedData.getUserLastName();
-    _userBirthday = LocalSavedData.getUserBirthday();
+    _userBirthday = DateTime.parse(LocalSavedData.getUserBirthday());
     _userLocation = LocalSavedData.getUserLocation();
     _userGender = LocalSavedData.getUserGender();
     _userPhone = LocalSavedData.getUserPhone();
@@ -47,7 +47,7 @@ class UserDataProvider extends ChangeNotifier {
     if (user != null) {
       _userName = user.name ?? '';
       _userLastName = user.lastName ?? '';
-      _userBirthday = user.birthday ?? '';
+      _userBirthday = user.birthday;
       _userLocation = user.location ?? '';
       _userGender = user.gender ?? '';
       _userProfilePicture = user.profilePicture ?? '';
@@ -74,7 +74,7 @@ class UserDataProvider extends ChangeNotifier {
   }
 
   void setUserBirthday(String birthday) {
-    _userBirthday = birthday;
+    _userBirthday = DateTime.parse(birthday);
     LocalSavedData.saveUserBirthday(birthday);
     notifyListeners();
   }
@@ -112,7 +112,7 @@ class UserDataProvider extends ChangeNotifier {
     _userId = '';
     _userName = '';
     _userLastName = '';
-    _userBirthday = '';
+    _userBirthday = null;
     _userGender = '';
     _userProfilePicture = '';
     _userLocation = '';

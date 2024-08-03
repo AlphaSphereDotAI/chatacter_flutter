@@ -1,7 +1,7 @@
 class UserData {
   final String? name;
   final String? lastName;
-  final String? birthday;
+  final DateTime? birthday;
   final String? location;
   final String? gender;
   final String phone;
@@ -27,7 +27,8 @@ class UserData {
     return UserData(
       name: map['name'] ?? '',
       lastName: map['last_name'] ?? '',
-      birthday: map['birthday'] ?? '',
+      birthday:
+          map['birthday'] != null ? DateTime.parse(map['birthday']) : null,
       location: map['location'] ?? '',
       gender: map['gender'] ?? '',
       phone: map['phone_number'] ?? '',

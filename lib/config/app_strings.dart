@@ -72,4 +72,10 @@ class AppStrings {
   static const searchForFriends = 'Search for friends';
   static const noResultsFound = 'No results found';
   static const enterPhoneNumber = 'Enter phone number';
+  static const insertMessage = 'Insert Message';
+  static const whatAreYouThinkingAbout = 'What are you thinking about?';
+  static const addImage = 'Add an Image';
+  static const uploadFromGallery = 'Upload from Gallery';
+  static const or = 'Or';
+  static const publish = 'Publish';
 }

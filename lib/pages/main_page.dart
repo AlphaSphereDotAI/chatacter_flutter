@@ -1,6 +1,5 @@
+import 'package:chatacter/components/new_post_model.dart';
 import 'package:chatacter/pages/chats_page.dart';
-import 'package:chatacter/pages/video_call_page.dart';
-import 'package:chatacter/pages/voice_call_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:chatacter/components/bottom_navigation_item.dart';
@@ -20,6 +19,13 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   BottomNavigationPages selectedIndex = BottomNavigationPages.home;
+
+  void _refreshPosts() {
+    setState(() {
+      // This will rebuild the HomePage and reload posts
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // FocusScope.of(context).unfocus();
@@ -29,6 +35,15 @@ class _MainPageState extends State<MainPage> {
       bottomNavigationBar: MyNavigationBar(
         currentIndex: selectedIndex,
         onTap: (value) {
+          if (value == BottomNavigationPages.add) {
+            showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) {
+                  return NewPostModal();
+                });
+            return;
+          }
           setState(() {
             selectedIndex = value;
           });
@@ -44,8 +59,6 @@ class _MainPageState extends State<MainPage> {
       "Favorite",
       style: TextStyle(fontSize: 32),
     )),
-    // VideoCallPage(),
-    // TestPage(),
     Center(
       child: Text(
         "Add",

@@ -12,6 +12,7 @@ import 'package:chatacter/components/tool_bar.dart';
 import 'package:chatacter/config/app_strings.dart';
 import 'package:chatacter/styles/app_colors.dart';
 import 'package:chatacter/styles/app_text.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart' as permission;
 
@@ -47,13 +48,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   void initState() {
-    // Try to load data from local database
     super.initState();
     Future.delayed(Duration.zero, () {
       final userDataProvider =
           Provider.of<UserDataProvider>(context, listen: false);
       userId = userDataProvider.getUserId;
-      // userDataProvider.loadUserData(userId!);
       imageId = userDataProvider.getUserProfilePicture;
     });
   }
@@ -130,7 +129,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _locationController.text = value.getUserLocation;
       }
       if (_birthdayController.text.isEmpty) {
-        _birthdayController.text = value.getUserBirthday;
+        _birthdayController.text =
+            DateFormat('dd/MM/yyyy').format(value.getUserBirthday!);
       }
       if (_phoneNumberController.text.isEmpty) {
         _phoneNumberController.text = value.getUserPhone;

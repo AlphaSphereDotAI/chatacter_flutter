@@ -16,7 +16,9 @@ Client client = Client()
 const String databaseId = '66803ce100323250c22e';
 const String userCollectionId = '66803d2a002bb74a6bc7';
 const String chatCollectionId = '6685c80c000ab935ee25';
+const String postCollectionId = '66a79f93002c1ffdda57';
 const String imagesBucketId = '6683247c00056fdd9ceb';
+const String postImagesBucketId = '66a7ad9d001be085ac46';
 
 Account account = Account(client);
 final Databases databases = Databases(client);
@@ -200,6 +202,23 @@ Future<UserData?> getUserDetails({required String userId}) async {
   }
 }
 
+// get user data
+Future<UserData?> getUserData({required String userId}) async {
+  try {
+    final response = await databases.getDocument(
+        databaseId: databaseId,
+        collectionId: userCollectionId,
+        documentId: userId);
+    print('Getting User Data...');
+    print(response.data);
+
+    return UserData.toMap(response.data);
+  } catch (e) {
+    print('Error in getting user data: $e');
+    return null;
+  }
+}
+
 // To update user data
 Future<bool> updateUserDetails(String picture, String location,
     {required String id,
@@ -247,6 +266,19 @@ Future<String?> saveImageToBucket({required InputFile image}) async {
   try {
     final response = await storage.createFile(
         bucketId: imagesBucketId, fileId: ID.unique(), file: image);
+    print('Response after saving to bucked: $response');
+    return response.$id;
+  } catch (e) {
+    print('Error when saving an image to bucket: $e');
+    return null;
+  }
+}
+
+// Upload and save image to storage bucked
+Future<String?> savePostImageToBucket({required InputFile image}) async {
+  try {
+    final response = await storage.createFile(
+        bucketId: postImagesBucketId, fileId: ID.unique(), file: image);
     print('Response after saving to bucked: $response');
     return response.$id;
   } catch (e) {
@@ -309,8 +341,7 @@ Future createNewChat(
     required String receiverId,
     required bool isImage}) async {
   try {
-    print('Here SenderId = $senderId, receiverId = $receiverId');
-    final msg = await databases.createDocument(
+    await databases.createDocument(
       databaseId: databaseId,
       collectionId: chatCollectionId,
       documentId: ID.unique(),
@@ -439,5 +470,55 @@ Future updateOnlineStatus(
     print("Updated user online status $status ");
   } catch (e) {
     print("Unable to update online status : $e");
+  }
+}
+
+//-----------------------------------------------------
+// To read posts from the database with pagination
+Future<DocumentList?> getAllPosts({int page = 1, int limit = 200}) async {
+  try {
+    // Calculate the number of documents to skip based on the current page
+    final skip = (page - 1) * limit;
+
+    final DocumentList posts = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: postCollectionId,
+      queries: [
+        Query.orderDesc('time_stamp'), // Assuming you have a timestamp field
+        Query.limit(limit), // Limit the number of posts returned
+        Query.offset(skip), // Skip documents for pagination
+      ],
+    );
+    return posts;
+  } catch (e) {
+    print('Error on reading posts: $e');
+    return null;
+  }
+}
+
+// To create a new post document in the database
+Future<bool> createPost({
+  required String message,
+  required String ownerId,
+  required String image,
+}) async {
+  try {
+    final response = await databases.createDocument(
+      databaseId: databaseId,
+      collectionId: postCollectionId,
+      documentId: ID.unique(),
+      data: {
+        'id': ID.unique(),
+        'message': message,
+        'owner_id': ownerId,
+        'time_stamp': DateTime.now().toIso8601String(),
+        'image': image,
+      },
+    );
+    print('Post created: $response');
+    return true;
+  } catch (e) {
+    print('Failed to create post: $e');
+    return false;
   }
 }

@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:chatacter/data/local_saved_data.dart';
 import 'package:chatacter/config/appwrire.dart';
 import 'package:chatacter/providers/chat_provider.dart';
+import 'package:chatacter/providers/post_provider.dart';
 import 'package:chatacter/providers/user_data_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:chatacter/config/app_routes.dart';
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => UserDataProvider()),
         ChangeNotifierProvider(create: (context) => ChatProvider()),
+        ChangeNotifierProvider(create: (context) => PostProvider()),
       ],
       child: MaterialApp(
         navigatorKey: navigatorKey, // Use the navigatorKey
