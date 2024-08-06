@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:appwrite/appwrite.dart';
-import 'package:chatacter/components/app_textfield.dart';
+import 'package:chatacter/components/extendable_text_field.dart';
 import 'package:chatacter/config/app_strings.dart';
 import 'package:chatacter/config/appwrire.dart';
 import 'package:chatacter/providers/post_provider.dart';
@@ -22,17 +22,40 @@ class NewPostModal extends StatefulWidget {
 class _NewPostModalState extends State<NewPostModal> {
   FilePickerResult? _filePickerResult;
   TextEditingController postMessageController = TextEditingController();
-
-  late String? userId = '';
+  String? userId;
+  bool _isPosting = false; // Track the posting state
+  double _initialChildSize = 0.62; // Default initial size
+  late FocusNode _focusNode;
+  int _minLines = 1; // Initial minLines value
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () {
+
+    // Initialize the FocusNode
+    _focusNode = FocusNode()
+      ..addListener(() {
+        setState(() {
+          // Ensure _minLines is updated correctly
+          _minLines = _focusNode.hasFocus ? 4 : 1;
+          // Update the initial size when the TextField gains or loses focus
+          _initialChildSize = _focusNode.hasFocus ? 0.9 : 0.62;
+        });
+      });
+
+    // Use WidgetsBinding to ensure userId is set after the build context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       final userDataProvider =
           Provider.of<UserDataProvider>(context, listen: false);
       userId = userDataProvider.getUserId;
     });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose(); // Dispose of the FocusNode
+    postMessageController.dispose();
+    super.dispose();
   }
 
   void _openFilePicker() async {
@@ -41,8 +64,7 @@ class _NewPostModalState extends State<NewPostModal> {
       await permission.Permission.storage.request();
     }
 
-    storageStatus = await permission
-        .Permission.storage.status; // Re-check the permission status
+    storageStatus = await permission.Permission.storage.status;
     if (storageStatus.isGranted) {
       FilePickerResult? result =
           await FilePicker.platform.pickFiles(type: FileType.image);
@@ -50,7 +72,6 @@ class _NewPostModalState extends State<NewPostModal> {
         _filePickerResult = result;
       });
     } else {
-      // Handle the case where permission is denied
       print('Storage permission is denied.');
     }
   }
@@ -63,7 +84,6 @@ class _NewPostModalState extends State<NewPostModal> {
         final inputFile =
             InputFile.fromBytes(bytes: fileBytes, filename: file.name);
 
-        // Create a new image and upload it to the bucket
         final imageUrl = await savePostImageToBucket(image: inputFile);
         return imageUrl;
       } else {
@@ -78,88 +98,132 @@ class _NewPostModalState extends State<NewPostModal> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        _openFilePicker();
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: _initialChildSize, // Use the dynamic size
+      minChildSize: 0.3, // Minimum height of the sheet
+      maxChildSize: 1.0, // Maximum height of the sheet
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
           ),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              AppStrings.insertMessage,
-              style: AppText.header1,
-            ),
-            SizedBox(
-              height: 16,
-            ),
-            AppTextfield(
-              hint: AppStrings.whatAreYouThinkingAbout,
-              controller: postMessageController,
-            ),
-            SizedBox(
-              height: 16,
-            ),
-            Text(
-              AppStrings.addImage,
-              style: AppText.header1,
-            ),
-            SizedBox(
-              height: 16,
-            ),
-            GestureDetector(
-              onTap: () {
-                _openFilePicker();
-              },
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.primary, width: 2),
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
+          padding: const EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  AppStrings.insertMessage,
+                  style: AppText.header1,
                 ),
-                child: Center(
-                  child: _filePickerResult != null
-                      ? Image.file(
-                          File(_filePickerResult!.files.first.path!),
-                          fit: BoxFit.cover,
-                        )
-                      : Text(AppStrings.uploadFromGallery),
+                SizedBox(
+                  height: 16,
                 ),
-              ),
+                // Container to control the minimum height of the TextField
+                ExtendableTextField(
+                  hint: AppStrings.whatAreYouThinkingAbout,
+                  controller: postMessageController,
+                  focusNode: _focusNode, // Attach the focus node
+                  minLines: _minLines, // Set the minLines value
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Text(
+                  AppStrings.addImage,
+                  style: AppText.header1,
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                GestureDetector(
+                  onTap: () {
+                    _openFilePicker();
+                  },
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.primary, width: 2),
+                      borderRadius: BorderRadius.all(Radius.circular(16)),
+                    ),
+                    child: Center(
+                      child: _filePickerResult != null
+                          ? Image.file(
+                              File(_filePickerResult!.files.first.path!),
+                              fit: BoxFit.cover,
+                            )
+                          : Text(AppStrings.uploadFromGallery),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                ElevatedButton(
+                  onPressed: _isPosting
+                      ? null
+                      : () async {
+                          setState(() {
+                            _isPosting = true; // Start posting
+                          });
+                          final imageUrl = await uploadPostImage();
+                          if (imageUrl != null && userId != null) {
+                            final postProvider = Provider.of<PostProvider>(
+                                context,
+                                listen: false);
+                            await postProvider.createNewPost(
+                              message: postMessageController.text,
+                              ownerId: userId!,
+                              timeStamp: DateTime.now(),
+                              image: imageUrl,
+                            );
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Post Published Successfully'),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error publishing post'),
+                              ),
+                            );
+                          }
+                          setState(() {
+                            _isPosting = false; // Reset button state
+                          });
+                        },
+                  child: _isPosting
+                      ? CircularProgressIndicator(
+                          color: Colors.white) // Show loading spinner
+                      : Text(
+                          AppStrings.publish,
+                          style: AppText.subtitle2,
+                        ),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: AppColors.black,
+                    backgroundColor:
+                        AppColors.primary, // Button background color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding:
+                        EdgeInsets.symmetric(vertical: 14), // Button padding
+                  ),
+                ),
+              ],
             ),
-            SizedBox(
-              height: 16,
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                // Upload image if available and get the URL
-                final imageUrl = await uploadPostImage();
-                if (imageUrl != null) {
-                  // Ensure you are using the PostProvider instance
-                  final postProvider =
-                      Provider.of<PostProvider>(context, listen: false);
-                  await postProvider.createNewPost(
-                    message: postMessageController.text,
-                    ownerId: userId!,
-                    timeStamp: DateTime.now(),
-                    image: imageUrl,
-                  );
-                }
-              },
-              child: Text('Post'),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

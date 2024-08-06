@@ -20,12 +20,6 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   BottomNavigationPages selectedIndex = BottomNavigationPages.home;
 
-  void _refreshPosts() {
-    setState(() {
-      // This will rebuild the HomePage and reload posts
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     // FocusScope.of(context).unfocus();
