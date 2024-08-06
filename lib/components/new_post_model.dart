@@ -3,6 +3,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:chatacter/components/app_textfield.dart';
 import 'package:chatacter/config/app_strings.dart';
 import 'package:chatacter/config/appwrire.dart';
+import 'package:chatacter/providers/post_provider.dart';
 import 'package:chatacter/providers/user_data_provider.dart';
 import 'package:chatacter/styles/app_colors.dart';
 import 'package:chatacter/styles/app_text.dart';
@@ -142,20 +143,19 @@ class _NewPostModalState extends State<NewPostModal> {
               onPressed: () async {
                 // Upload image if available and get the URL
                 final imageUrl = await uploadPostImage();
-                createPost(
-                  message: postMessageController.text,
-                  ownerId: userId!,
-                  image: imageUrl ?? '',
-                );
+                if (imageUrl != null) {
+                  // Ensure you are using the PostProvider instance
+                  final postProvider =
+                      Provider.of<PostProvider>(context, listen: false);
+                  await postProvider.createNewPost(
+                    message: postMessageController.text,
+                    ownerId: userId!,
+                    timeStamp: DateTime.now(),
+                    image: imageUrl,
+                  );
+                }
               },
-              child: Text(
-                AppStrings.publish,
-                style: AppText.subtitle3,
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.black,
-              ),
+              child: Text('Post'),
             ),
           ],
         ),

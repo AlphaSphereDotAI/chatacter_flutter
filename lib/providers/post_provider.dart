@@ -50,6 +50,7 @@ class PostProvider extends ChangeNotifier {
           }
           _currentPage = page; // Update the current page
           notifyListeners();
+          print('Posts loaded: ${postsList.length}');
         }
       }
     } catch (e) {
@@ -73,26 +74,19 @@ class PostProvider extends ChangeNotifier {
     required DateTime timeStamp,
     required String image,
   }) async {
+    print('Creating post with message: $message');
     final success = await createPost(
       message: message,
       ownerId: ownerId,
       image: image,
     );
+    print('Create post success: $success');
     if (success) {
-      // Optionally fetch and assign the owner or set to null if not available
-      postsList.insert(
-        0,
-        Post(
-          id: ID.unique(), // Use a generated ID instead of 'temp_id'
-          message: message,
-          owner: null, // Optionally fetch and assign the owner
-          timeStamp: timeStamp,
-          image: image,
-        ),
-      );
+      loadPosts(page: _currentPage);
       notifyListeners();
+      print('Post created and added to the list');
     } else {
-      // Optionally handle creation failure
+      print('Failed to create post');
     }
   }
 }

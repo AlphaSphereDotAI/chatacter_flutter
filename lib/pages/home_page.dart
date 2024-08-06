@@ -39,26 +39,32 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Consumer<PostProvider>(
         builder: (context, postProvider, child) {
+          print('Consumer Invoked');
           if (postProvider.posts.isEmpty) {
             return Center(child: CircularProgressIndicator());
           }
 
-          return ListView.separated(
-            itemBuilder: (context, index) {
-              if (index == postProvider.posts.length - 1) {
-                // Load more posts when reaching the end
+          return NotificationListener<ScrollNotification>(
+            onNotification: (scrollInfo) {
+              if (scrollInfo.metrics.pixels ==
+                  scrollInfo.metrics.maxScrollExtent) {
                 postProvider.loadMorePosts();
               }
-              return PostItem(
-                post: postProvider.posts[index],
-              );
+              return true;
             },
-            itemCount: postProvider.posts.length,
-            separatorBuilder: (BuildContext context, int index) {
-              return SizedBox(
-                height: 24,
-              );
-            },
+            child: ListView.separated(
+              itemBuilder: (context, index) {
+                return PostItem(
+                  post: postProvider.posts[index],
+                );
+              },
+              itemCount: postProvider.posts.length,
+              separatorBuilder: (BuildContext context, int index) {
+                return SizedBox(
+                  height: 24,
+                );
+              },
+            ),
           );
         },
       ),
