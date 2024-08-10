@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:chatacter/config/app_routes.dart';
 import 'package:chatacter/styles/app_colors.dart';
 import 'package:provider/provider.dart';
+import 'package:chatacter/data/local_saved_data.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 List<CameraDescription>? cameras;
@@ -98,29 +99,31 @@ class _CheckUserSessionsState extends State<CheckUserSessions> {
 
     Future.delayed(Duration.zero, () async {
       // Load data from local storage
-      final userDataProvider =
-          Provider.of<UserDataProvider>(context, listen: false);
-      await userDataProvider.loadDataFromLocal();
+      if (LocalSavedData.hasStoredData()) {
+        final userDataProvider =
+            Provider.of<UserDataProvider>(context, listen: false);
+        await userDataProvider.loadDataFromLocal();
 
-      // Check sessions and then load data from the database
-      bool sessionExists = await checkSessions();
+// Check sessions and then load data from the database
+        bool sessionExists = await checkSessions();
 
-      if (sessionExists) {
-        // Load data from the database
-        await userDataProvider.loadUserData(userDataProvider.getUserId);
+        if (sessionExists) {
+          // Load data from the database
+          await userDataProvider.loadUserData(userDataProvider.getUserId);
 
-        final userName = userDataProvider.getUserName;
+          final userName = userDataProvider.getUserName;
 
-        if (userName.isNotEmpty) {
-          if (mounted) {
-            Navigator.of(context)
-                .pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
-          }
-        } else {
-          if (mounted) {
-            Navigator.of(context).pushNamedAndRemoveUntil(
-                AppRoutes.editProfile, (route) => false,
-                arguments: {"title": "add"});
+          if (userName.isNotEmpty) {
+            if (mounted) {
+              Navigator.of(context)
+                  .pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
+            }
+          } else {
+            if (mounted) {
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                  AppRoutes.editProfile, (route) => false,
+                  arguments: {"title": "add"});
+            }
           }
         }
       } else {

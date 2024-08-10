@@ -42,8 +42,8 @@ class AiCharacters extends UserData {
       voice: {
         'name': 'en-us-x-iom-local',
         'locale': 'en-US',
-        'pitch': 1.1,
-        'rate': 0.4,
+        'pitch': 1.0,
+        'rate': 0.5,
       },
       name: 'Albert',
       lastName: 'Einstein',

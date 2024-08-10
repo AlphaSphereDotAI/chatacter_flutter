@@ -84,4 +84,9 @@ class LocalSavedData {
     final bool data = await preferences!.clear();
     print('Cleared all data from local: $data');
   }
+
+  static bool hasStoredData() {
+    return preferences!.containsKey('Phone') &&
+        preferences!.getString('Phone')!.isNotEmpty;
+  }
 }
