@@ -18,6 +18,9 @@ class AppText {
 
   static const body2 = TextStyle(fontSize: 14, fontWeight: FontWeight.w400);
 
+  static const voiceCallFont =
+      TextStyle(fontSize: 24, fontWeight: FontWeight.w400);
+
   static const friendChatNameFont =
       TextStyle(fontSize: 16, fontWeight: FontWeight.w600);
 

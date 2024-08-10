@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chatacter/characters/characters.dart';
 import 'package:chatacter/config/app_icons.dart';
 import 'package:chatacter/models/user_data.dart';
+import 'package:chatacter/styles/app_colors.dart';
+import 'package:chatacter/styles/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
@@ -18,20 +21,38 @@ class VoiceCallPage extends StatefulWidget {
 }
 
 class _VoiceCallPageState extends State<VoiceCallPage> {
+  AiCharacters? aiCharacter;
   final FlutterTts flutterTts = FlutterTts();
   final SpeechToText _speechToText = SpeechToText();
   bool _isSpeaking = false;
   LLM? _llm;
   List<Map<String, String>> chatHistory = [];
-  String receiverId = 'dc57f5a807524d09ba6d';
+  late UserData receiver;
   Timer? _activityTimer; // Timer to check activity
   Map? _CurrentVoice;
 
   @override
   void initState() {
     super.initState();
-    _initializeSpeechRecognition();
-    _startActivityTimer(); // Start the activity timer
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    receiver = ModalRoute.of(context)!.settings.arguments as UserData;
+
+    // Check if the receiver is an AiCharacter
+    aiCharacter = AiCharacters.characters.firstWhere(
+      (character) => character.id == receiver.id.toString().trim(),
+      orElse: () => null as AiCharacters,
+    );
+
+    if (aiCharacter != null) {
+      _initializeSpeechRecognition();
+      _startActivityTimer(); // Start the activity timer
+    } else {
+      print("Normal User");
+    }
   }
 
   @override
@@ -98,13 +119,12 @@ class _VoiceCallPageState extends State<VoiceCallPage> {
   }
 
   Future<String> _getLLMResponse(String prompt) async {
-    UserData receiver = ModalRoute.of(context)!.settings.arguments as UserData;
     if (_llm == null) {
       _llm = LLM(); // Initialize LLM if not already initialized
       chatHistory.add({
         "role": "assistant",
         "content":
-            "You are ${receiver.name} ${receiver.lastName} and you are in a voice chat. Respond to the user's questions and comments as ${receiver.name} ${receiver.lastName} would, without explicitly stating that you are ${receiver.name} ${receiver.lastName}. Use very very short sentences. Be polite and don't be rude."
+            "You are ${receiver.name} ${receiver.lastName} and you are in a voice chat. Respond to the user's questions and comments as ${receiver.name} ${receiver.lastName} would, without explicitly stating that you are ${receiver.name} ${receiver.lastName}. Use very very short sentences."
       });
     }
     chatHistory.add({
@@ -119,26 +139,13 @@ class _VoiceCallPageState extends State<VoiceCallPage> {
   Future<void> _speak(String text) async {
     if (!mounted) return; // Check if the widget is still mounted
     await flutterTts.setLanguage('en-US');
-    await flutterTts.setPitch(0.5);
-    await flutterTts.speak(text);
-
-    flutterTts.getVoices.then((data) {
-      try {
-        List<Map> _voices = List<Map>.from(data);
-        _voices =
-            _voices.where((_voice) => _voice['name'].contains('en')).toList();
-        if (mounted) {
-          setState(() {
-            _CurrentVoice = _voices[10]; //7,
-            print('_CurrentVoice: ${_CurrentVoice}');
-            flutterTts.setVoice({
-              'name': _CurrentVoice!['name'],
-              'locale': _CurrentVoice!['locale']
-            });
-          });
-        }
-      } catch (e) {}
+    await flutterTts.setPitch(aiCharacter!.voice['pitch']);
+    await flutterTts.setSpeechRate(aiCharacter!.voice['rate']);
+    flutterTts.setVoice({
+      "name": aiCharacter!.voice['name'],
+      "locale": aiCharacter!.voice['locale']
     });
+    await flutterTts.speak(text);
 
     if (mounted) {
       setState(() {
@@ -168,69 +175,77 @@ class _VoiceCallPageState extends State<VoiceCallPage> {
 
   @override
   Widget build(BuildContext context) {
-    UserData receiver = ModalRoute.of(context)!.settings.arguments as UserData;
-    receiverId = receiver.id;
-
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AvatarGlow(
-                animate: _isSpeaking,
-                glowColor: Theme.of(context).primaryColor,
-                duration: const Duration(milliseconds: 2000),
-                repeat: true,
-                child: Material(
-                  elevation: 8.0,
-                  shape: const CircleBorder(),
-                  child: CircleAvatar(
-                    backgroundColor: Colors.amber,
-                    radius: 80.0,
-                    backgroundImage: receiver.profilePicture == null ||
-                            receiver.profilePicture == null
-                        ? Image.asset(AppIcons.userIcon).image
-                        : CachedNetworkImageProvider(
-                            'https://cloud.appwrite.io/v1/storage/buckets/6683247c00056fdd9ceb/files/${receiver.profilePicture}/view?project=667d37b30023f69f7f74&mode=admin'),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(receiver.name!),
-              const SizedBox(height: 20),
-              Stack(
-                clipBehavior: Clip.none, // Allow overflow for the red circle
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 56, // Adjust size of red circle as needed
-                    height: 56, // Adjust size of red circle as needed
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.red,
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: Center(
-                      child: IconButton(
-                        onPressed: () {
-                          if (mounted) {
-                            _cancelSpeaking();
-                            _stopListening();
-                            Navigator.pop(context);
-                          }
-                        },
-                        icon: Icon(Icons.call),
-                        color: Colors.white, // Icon color
+                  AvatarGlow(
+                    animate: _isSpeaking,
+                    glowColor: Theme.of(context).primaryColor,
+                    duration: const Duration(milliseconds: 2000),
+                    repeat: true,
+                    child: Material(
+                      elevation: 8.0,
+                      shape: const CircleBorder(),
+                      child: CircleAvatar(
+                        backgroundColor: Colors.amber,
+                        radius: 80.0,
+                        backgroundImage: receiver.profilePicture == null ||
+                                receiver.profilePicture == null
+                            ? Image.asset(AppIcons.userIcon).image
+                            : CachedNetworkImageProvider(
+                                'https://cloud.appwrite.io/v1/storage/buckets/6683247c00056fdd9ceb/files/${receiver.profilePicture}/view?project=667d37b30023f69f7f74&mode=admin'),
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
+                  Text(
+                    '${receiver.name!} ${receiver.lastName!}',
+                    style: AppText.voiceCallFont,
+                  ),
                 ],
-              )
-            ],
+              ),
+            ),
           ),
-        ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+            decoration: BoxDecoration(
+              color: AppColors.foreground,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red,
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+                      if (mounted) {
+                        _cancelSpeaking();
+                        _stopListening();
+                        Navigator.pop(context);
+                      }
+                    },
+                    icon: const Icon(Icons.call_end),
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

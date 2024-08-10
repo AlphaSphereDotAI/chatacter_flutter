@@ -406,11 +406,20 @@ class _ChatPageState extends State<ChatPage> {
                     Expanded(
                       child: TextField(
                         onSubmitted: (value) {
-                          if (AiCharacters.charactersIds
-                              .contains(receiver.id.toString().trim())) {
-                            _sendMessageToLLM(receiver: receiver);
+                          // Check if the receiver is an AiCharacter
+                          AiCharacters? aiCharacter =
+                              AiCharacters.characters.firstWhere(
+                            (character) =>
+                                character.id == receiver.id.toString().trim(),
+                            orElse: () => null as AiCharacters,
+                          );
+
+                          if (aiCharacter != null) {
+                            _sendMessageToLLM(
+                                receiver:
+                                    aiCharacter); // Send message to LLM with AiCharacter
                           } else {
-                            _sendMessage(receiver: receiver);
+                            _sendMessage(receiver: receiver); // Regular message
                           }
                         },
                         controller: messageController,
@@ -428,11 +437,20 @@ class _ChatPageState extends State<ChatPage> {
                             color: AppColors.secondary)),
                     IconButton(
                       onPressed: () {
-                        if (AiCharacters.charactersIds
-                            .contains(receiver.id.toString().trim())) {
-                          _sendMessageToLLM(receiver: receiver);
+                        // Check if the receiver is an AiCharacter
+                        AiCharacters? aiCharacter =
+                            AiCharacters.characters.firstWhere(
+                          (character) =>
+                              character.id == receiver.id.toString().trim(),
+                          orElse: () => null as AiCharacters,
+                        );
+
+                        if (aiCharacter != null) {
+                          _sendMessageToLLM(
+                              receiver:
+                                  aiCharacter); // Send message to LLM with AiCharacter
                         } else {
-                          _sendMessage(receiver: receiver);
+                          _sendMessage(receiver: receiver); // Regular message
                         }
                       },
                       icon: const Icon(Icons.send, color: AppColors.secondary),

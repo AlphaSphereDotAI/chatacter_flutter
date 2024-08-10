@@ -110,16 +110,13 @@ class _CheckUserSessionsState extends State<CheckUserSessions> {
         await userDataProvider.loadUserData(userDataProvider.getUserId);
 
         final userName = userDataProvider.getUserName;
-        print("username: $userName");
 
         if (userName.isNotEmpty) {
-          print('Entered Home, Username: $userName');
           if (mounted) {
             Navigator.of(context)
                 .pushNamedAndRemoveUntil(AppRoutes.main, (route) => false);
           }
         } else {
-          print('Entered Add Details, Username: $userName');
           if (mounted) {
             Navigator.of(context).pushNamedAndRemoveUntil(
                 AppRoutes.editProfile, (route) => false,

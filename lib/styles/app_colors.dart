@@ -10,6 +10,7 @@ class AppColors {
   static const fieldColor = Color(0xff8D939F);
   static const fieldCursorColor = Color.fromARGB(255, 43, 102, 221);
   static const background = Color(0xff1A2947);
+  static const foreground = Color.fromARGB(255, 45, 70, 120);
   static const black = Color(0xff000000);
   static const white = Color(0xffffffff);
   static const grey = Colors.grey;
