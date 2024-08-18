@@ -51,7 +51,7 @@ class _ChatsPageState extends State<ChatsPage> {
         ),
         body: Consumer<ChatProvider>(builder: (context, value, child) {
           if (value.getAllChat.isEmpty) {
-            return Center(child: Text(AppStrings.noChats));
+            return Center(child: Text(AppStrings.noChatsFound));
           } else {
             List othertUsers = value.getAllChat.keys.toList();
 

@@ -37,9 +37,11 @@ class AppStrings {
   static const offline = "offline";
   static const delete = "Delete";
   static const cancel = "Cancel";
+  static const editMessage = "Edit Message";
+  static const update = "Update";
   static const edit = "Edit";
   static const editThisMessage = "Edit this message";
-  static const noChats = "No Chats!";
+  static const noChatsFound = "No chats found. ";
   static const cantBeDeleted = "Can't be delete";
   static const chooseWhatToDoWithImage =
       "Choose what you want to do with this image";
@@ -67,6 +69,8 @@ class AppStrings {
   static const helloHowAreYou = 'Hello, how are you?!';
   static const nine = '9';
   static const fourPastHalf = '04:30';
+  static const pleaseSelectYourGender = 'Please select your gender';
+  static const updatedSuccessfully = 'Updated Successfully';
   static const chats = 'Chats';
   static const addFriends = 'Add Friends';
   static const searchForFriends = 'Search for friends';
@@ -78,4 +82,11 @@ class AppStrings {
   static const uploadFromGallery = 'Upload from Gallery';
   static const or = 'Or';
   static const publish = 'Publish';
+  static const saveToFavorites = 'Save to favorites';
+  static const removeFromFavorites = 'Remove from favorites';
+  static const postAddedToFavorites = 'Post added to favorites';
+  static const noFavoritePostsFound = 'No favorite posts found.';
+  static const editPost = 'Edit post';
+  static const deletePost = 'Delete post';
+  static const cannotBeEmpty = 'Can\'t be empty!';
 }

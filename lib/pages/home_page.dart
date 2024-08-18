@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Consumer<PostProvider>(
         builder: (context, postProvider, child) {
-          print('Consumer Invoked');
+          // print('Consumer Invoked');
           if (postProvider.posts.isEmpty) {
             return Center(child: CircularProgressIndicator());
           }
@@ -56,6 +56,7 @@ class _HomePageState extends State<HomePage> {
               itemBuilder: (context, index) {
                 return PostItem(
                   post: postProvider.posts[index],
+                  favorite: false,
                 );
               },
               itemCount: postProvider.posts.length,

@@ -1,5 +1,6 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
+import 'package:chatacter/components/post_item.dart';
 import 'package:chatacter/main.dart';
 import 'package:chatacter/models/chat.dart';
 import 'package:chatacter/models/message.dart';
@@ -209,8 +210,8 @@ Future<UserData?> getUserData({required String userId}) async {
         databaseId: databaseId,
         collectionId: userCollectionId,
         documentId: userId);
-    print('Getting User Data...');
-    print(response.data);
+    // print('Getting User Data...');
+    // print(response.data);
 
     return UserData.toMap(response.data);
   } catch (e) {
@@ -237,7 +238,7 @@ Future<bool> updateUserDetails(String picture, String location,
           'location': location,
           'last_name': lastName,
           'birthday': birthday,
-          'gender': gender
+          'gender': gender,
         });
 
     Provider.of<UserDataProvider>(navigatorKey.currentContext!, listen: false)
@@ -496,6 +497,23 @@ Future<DocumentList?> getAllPosts({int page = 1, int limit = 200}) async {
   }
 }
 
+// To read favorite posts from the database with pagination
+Future<List?> getFavoritePosts({required String userId}) async {
+  try {
+    final response = await databases.getDocument(
+        databaseId: databaseId,
+        collectionId: userCollectionId,
+        documentId: userId);
+    print('Getting User Favorites...');
+    print(response.data['favorite_posts']);
+
+    return response.data['favorite_posts'];
+  } catch (e) {
+    print('Error in getting user data: $e');
+    return null;
+  }
+}
+
 // To create a new post document in the database
 Future<bool> createPost({
   required String message,
@@ -519,6 +537,199 @@ Future<bool> createPost({
     return true;
   } catch (e) {
     print('Failed to create post: $e');
+    return false;
+  }
+}
+
+Future<bool> editPostInDatabase({
+  required String postId,
+  required String message,
+  required String? image,
+}) async {
+  try {
+    // Fetch the post document ID based on the postId
+    final DocumentList postDocument = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: postCollectionId,
+      queries: [
+        Query.equal('id', postId),
+        Query.limit(1), // Limit to 1 document
+      ],
+    );
+
+    if (postDocument.documents.isEmpty) {
+      print('Post not found');
+      return false;
+    }
+
+    String postDocumentId = postDocument.documents.first.$id;
+
+    final data = await databases.updateDocument(
+      databaseId: databaseId,
+      collectionId: postCollectionId,
+      documentId: postDocumentId,
+      data: {
+        'message': message,
+        'image': image,
+      },
+    );
+    print('Post updated successfully');
+    print(data);
+    return true;
+  } on AppwriteException catch (e) {
+    print('Error updating post: $e');
+    return false;
+  }
+}
+
+// To delete a post document from the database
+Future<bool> deletePostFromDatabase({
+  required String postId,
+}) async {
+  try {
+    // Fetch the post document ID based on the postId
+    final DocumentList postDocument = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: postCollectionId,
+      queries: [
+        Query.equal('id', postId),
+        Query.limit(1), // Limit to 1 document
+      ],
+    );
+
+    if (postDocument.documents.isEmpty) {
+      print('Post not found');
+      return false;
+    }
+
+    String postDocumentId = postDocument.documents.first.$id;
+
+    await databases.deleteDocument(
+      databaseId: databaseId,
+      collectionId: postCollectionId,
+      documentId: postDocumentId,
+    );
+    print('Post deleted: $postId');
+    return true;
+  } catch (e) {
+    print('Failed to delete post: $e');
+    return false;
+  }
+}
+
+// Add post to favorites
+Future<bool> addToFavorites(
+    {required String userId, required String postId}) async {
+  try {
+    // Get the user's current favorite posts
+    List<dynamic>? userFavorites = await getFavoritePosts(userId: userId);
+    if (userFavorites == null) {
+      userFavorites = []; // Initialize as an empty list if null
+    }
+
+    // Fetch the post document ID based on the postId
+    final DocumentList postDocument = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: postCollectionId,
+      queries: [
+        Query.equal('id', postId),
+        Query.limit(1), // Limit to 1 document
+      ],
+    );
+
+    if (postDocument.documents.isEmpty) {
+      print('Post not found');
+      return false;
+    }
+
+    String postDocumentId = postDocument.documents.first.$id;
+
+    // Check if the post is already in the user's favorites
+    if (userFavorites.contains(postDocumentId)) {
+      print('Post is already in favorites');
+      return true;
+    }
+
+    // Add the post to the user's favorites
+    userFavorites.add(postDocumentId);
+
+    // Update the user's favorite posts in the database
+    final data = await databases.updateDocument(
+      databaseId: databaseId,
+      collectionId: userCollectionId,
+      documentId: userId,
+      data: {
+        'favorite_posts': userFavorites,
+      },
+    );
+
+    print('Added to favorites');
+    print(data);
+    return true;
+  } on AppwriteException catch (e) {
+    print('Can\'t add post to favorites: $e');
+    return false;
+  }
+}
+
+// Remove post from favorites
+Future<bool> removePostFromFavoritesDatabase(
+    {required String userId, required String postId}) async {
+  try {
+    // Get the user's current favorite posts
+    List<dynamic>? userFavorites = await getFavoritePosts(userId: userId);
+    if (userFavorites == null) {
+      print('No favorites found for the user');
+      return false; // No favorites to remove from
+    }
+
+    // Fetch the post document ID based on the postId
+    final DocumentList postDocument = await databases.listDocuments(
+      databaseId: databaseId,
+      collectionId: postCollectionId,
+      queries: [
+        Query.equal('id', postId),
+        Query.limit(1), // Limit to 1 document
+      ],
+    );
+
+    if (postDocument.documents.isEmpty) {
+      print('Post not found');
+      return false;
+    }
+
+    String postDocumentId = postDocument.documents.first.$id;
+
+    // print('User Favorites: ${userFavorites}');
+    // print('Post document id: ${postDocument.documents.first.$id}');
+    // print(userFavorites.any((favorite) => favorite['\$id'] == postDocumentId));
+
+    // Check if the post is in the user's favorites
+    if (!userFavorites.any((favorite) => favorite['\$id'] == postDocumentId)) {
+      print('Post is not in favorites');
+      return true; // The post is already not in favorites
+    }
+
+    print('Favorites before: ${userFavorites}');
+    // Remove the post from the user's favorites
+    userFavorites.removeWhere((favorite) => favorite['\$id'] == postDocumentId);
+    print('Favorites after: ${userFavorites}');
+
+    // Update the user's favorite posts in the database
+    final data = await databases.updateDocument(
+      databaseId: databaseId,
+      collectionId: userCollectionId,
+      documentId: userId,
+      data: {
+        'favorite_posts': userFavorites,
+      },
+    );
+
+    print('Removed from favorites');
+    print(data);
+    return true;
+  } on AppwriteException catch (e) {
+    print('Can\'t remove post from favorites: $e');
     return false;
   }
 }

@@ -1,8 +1,10 @@
+import 'package:chatacter/components/new_post_model.dart';
 import 'package:chatacter/main.dart';
 import 'package:chatacter/pages/chat_page.dart';
 import 'package:chatacter/pages/chats_page.dart';
 import 'package:chatacter/pages/edit_profile_page.dart';
 import 'package:chatacter/pages/add_friends_page.dart';
+import 'package:chatacter/pages/favorites_page.dart';
 import 'package:chatacter/pages/home_page.dart';
 import 'package:chatacter/pages/login_page.dart';
 import 'package:chatacter/pages/main_page.dart';
@@ -18,6 +20,7 @@ class AppRoutes {
   static const login = "/login";
   static const home = "/home";
   static const main = "/main";
+  static const favorites = "/favorites";
   static const editProfile = "/edit_profile";
   static const nearby = "/nearby";
   static const otp = "/otp";
@@ -34,6 +37,7 @@ class AppRoutes {
     login: (context) => LoginPage(),
     main: (context) => MainPage(),
     home: (context) => HomePage(),
+    favorites: (context) => FavoritesPage(),
     editProfile: (context) => EditProfilePage(),
     nearby: (context) => NearbyPage(),
     otp: (context) => OtpPage(),

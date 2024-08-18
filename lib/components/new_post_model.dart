@@ -13,47 +13,51 @@ import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart' as permission;
 
 class NewPostModal extends StatefulWidget {
-  const NewPostModal({super.key});
+  final String? postId;
+  final String? initialMessage;
+  final String? initialImageUrl;
+
+  const NewPostModal({
+    super.key,
+    this.postId,
+    this.initialMessage,
+    this.initialImageUrl,
+  });
 
   @override
   State<NewPostModal> createState() => _NewPostModalState();
 }
 
 class _NewPostModalState extends State<NewPostModal> {
+  late String? userId;
+
   FilePickerResult? _filePickerResult;
-  TextEditingController postMessageController = TextEditingController();
-  String? userId;
-  bool _isPosting = false; // Track the posting state
-  double _initialChildSize = 0.62; // Default initial size
+  late TextEditingController postMessageController;
+  bool _isPosting = false;
+  double _initialChildSize = 0.62;
   late FocusNode _focusNode;
-  int _minLines = 1; // Initial minLines value
+  int _minLines = 1;
 
   @override
   void initState() {
     super.initState();
+    userId = Provider.of<UserDataProvider>(context, listen: false).getUserId;
 
     // Initialize the FocusNode
     _focusNode = FocusNode()
       ..addListener(() {
         setState(() {
-          // Ensure _minLines is updated correctly
           _minLines = _focusNode.hasFocus ? 4 : 1;
-          // Update the initial size when the TextField gains or loses focus
           _initialChildSize = _focusNode.hasFocus ? 0.9 : 0.62;
         });
       });
 
-    // Use WidgetsBinding to ensure userId is set after the build context is available
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userDataProvider =
-          Provider.of<UserDataProvider>(context, listen: false);
-      userId = userDataProvider.getUserId;
-    });
+    postMessageController = TextEditingController(text: widget.initialMessage);
   }
 
   @override
   void dispose() {
-    _focusNode.dispose(); // Dispose of the FocusNode
+    _focusNode.dispose();
     postMessageController.dispose();
     super.dispose();
   }
@@ -100,9 +104,9 @@ class _NewPostModalState extends State<NewPostModal> {
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
       expand: false,
-      initialChildSize: _initialChildSize, // Use the dynamic size
-      minChildSize: 0.3, // Minimum height of the sheet
-      maxChildSize: 1.0, // Maximum height of the sheet
+      initialChildSize: _initialChildSize,
+      minChildSize: 0.3,
+      maxChildSize: 1.0,
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
@@ -119,29 +123,24 @@ class _NewPostModalState extends State<NewPostModal> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  AppStrings.insertMessage,
+                  widget.postId == null
+                      ? AppStrings.insertMessage
+                      : 'Edit Message',
                   style: AppText.header1,
                 ),
-                SizedBox(
-                  height: 16,
-                ),
-                // Container to control the minimum height of the TextField
+                SizedBox(height: 16),
                 ExtendableTextField(
                   hint: AppStrings.whatAreYouThinkingAbout,
                   controller: postMessageController,
-                  focusNode: _focusNode, // Attach the focus node
-                  minLines: _minLines, // Set the minLines value
+                  focusNode: _focusNode,
+                  minLines: _minLines,
                 ),
-                SizedBox(
-                  height: 16,
-                ),
+                SizedBox(height: 16),
                 Text(
                   AppStrings.addImage,
                   style: AppText.header1,
                 ),
-                SizedBox(
-                  height: 16,
-                ),
+                SizedBox(height: 16),
                 GestureDetector(
                   onTap: () {
                     _openFilePicker();
@@ -159,64 +158,67 @@ class _NewPostModalState extends State<NewPostModal> {
                               File(_filePickerResult!.files.first.path!),
                               fit: BoxFit.cover,
                             )
-                          : Text(AppStrings.uploadFromGallery),
+                          : (widget.initialImageUrl != null
+                              ? Image.network(
+                                  'https://cloud.appwrite.io/v1/storage/buckets/66a7ad9d001be085ac46/files/${widget.initialImageUrl!}/view?project=667d37b30023f69f7f74&mode=admin',
+                                  fit: BoxFit.cover,
+                                )
+                              : Text(AppStrings.uploadFromGallery)),
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 16,
-                ),
+                SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _isPosting
                       ? null
                       : () async {
                           setState(() {
-                            _isPosting = true; // Start posting
+                            _isPosting = true;
                           });
                           final imageUrl = await uploadPostImage();
-                          if (imageUrl != null && userId != null) {
-                            final postProvider = Provider.of<PostProvider>(
-                                context,
-                                listen: false);
+                          final postProvider =
+                              Provider.of<PostProvider>(context, listen: false);
+                          if (widget.postId == null) {
+                            // Create new post
                             await postProvider.createNewPost(
                               message: postMessageController.text,
                               ownerId: userId!,
                               timeStamp: DateTime.now(),
-                              image: imageUrl,
-                            );
-                            Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Post Published Successfully'),
-                              ),
+                              image: imageUrl ?? widget.initialImageUrl!,
                             );
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error publishing post'),
-                              ),
+                            // Edit existing post
+                            await postProvider.editPost(
+                              postId: widget.postId!,
+                              message: postMessageController.text,
+                              image: imageUrl ?? widget.initialImageUrl,
                             );
                           }
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(widget.postId == null
+                                  ? 'Post Published Successfully'
+                                  : 'Post Updated Successfully'),
+                            ),
+                          );
                           setState(() {
-                            _isPosting = false; // Reset button state
+                            _isPosting = false;
                           });
                         },
                   child: _isPosting
-                      ? CircularProgressIndicator(
-                          color: Colors.white) // Show loading spinner
+                      ? CircularProgressIndicator(color: Colors.white)
                       : Text(
-                          AppStrings.publish,
+                          widget.postId == null ? AppStrings.publish : 'Update',
                           style: AppText.subtitle2,
                         ),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: AppColors.black,
-                    backgroundColor:
-                        AppColors.primary, // Button background color
+                    backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding:
-                        EdgeInsets.symmetric(vertical: 14), // Button padding
+                    padding: EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
               ],

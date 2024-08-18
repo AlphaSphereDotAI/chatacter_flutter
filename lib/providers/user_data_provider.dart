@@ -12,6 +12,7 @@ class UserDataProvider extends ChangeNotifier {
   String _userGender = '';
   String _userPhone = '';
   String _userProfilePicture = '';
+  List<dynamic> _userFavoritePosts = [];
   String _userDeviceToken = '';
 
   String get getUserId => _userId;
@@ -22,6 +23,7 @@ class UserDataProvider extends ChangeNotifier {
   String get getUserGender => _userGender;
   String get getUserPhone => _userPhone;
   String get getUserProfilePicture => _userProfilePicture;
+  List<dynamic> get getUserFavoritePosts => _userFavoritePosts;
   String get getUserDeviceToken => _userDeviceToken;
 
   // To load the data from local device
@@ -35,8 +37,8 @@ class UserDataProvider extends ChangeNotifier {
     _userPhone = LocalSavedData.getUserPhone();
     _userProfilePicture = LocalSavedData.getUserProfilePicture();
 
-    print(
-        'Data loaded from local:\nID: $_userId\nName: $_userName\nLastname: $_userLastName\nBirthday: $_userBirthday\nLocation: $_userLocation\nGender: $_userGender\nPhone: $_userPhone');
+    // print(
+    //     'Data loaded from local:\nID: $_userId\nName: $_userName\nLastname: $_userLastName\nBirthday: $_userBirthday\nLocation: $_userLocation\nGender: $_userGender\nPhone: $_userPhone');
 
     notifyListeners();
   }
@@ -51,9 +53,19 @@ class UserDataProvider extends ChangeNotifier {
       _userLocation = user.location ?? '';
       _userGender = user.gender ?? '';
       _userProfilePicture = user.profilePicture ?? '';
+      _userFavoritePosts = user.favoritePosts ?? [];
       notifyListeners();
     }
   }
+
+  // // To load the data from our AppWrite database
+  // Future<void> getUserFavorites(String userId) async {
+  //   UserData? user = await getUserDetails(userId: userId);
+  //   if (user != null) {
+  //     _userFavoritePosts = user.favoritePosts ?? [];
+  //     notifyListeners();
+  //   }
+  // }
 
   void setUserId(String id) {
     _userId = id;

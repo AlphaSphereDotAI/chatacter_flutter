@@ -210,7 +210,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         child: AppTextfield(
                           validator: (value) {
                             if (value!.isEmpty) {
-                              return 'Can\'t be empty!';
+                              return AppStrings.cannotBeEmpty;
                             }
                             return null;
                           },
@@ -228,7 +228,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         child: AppTextfield(
                           validator: (value) {
                             if (value!.isEmpty) {
-                              return 'Can\'t be empty!';
+                              return AppStrings.cannotBeEmpty;
                             }
                             return null;
                           },
@@ -255,7 +255,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   child: AppTextfield(
                     validator: (value) {
                       if (value!.isEmpty) {
-                        return 'Can\'t be empty!';
+                        return AppStrings.cannotBeEmpty;
                       }
                       return null;
                     },
@@ -271,7 +271,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   child: AppTextfield(
                     validator: (value) {
                       if (value!.isEmpty) {
-                        return 'Can\'t be empty!';
+                        return AppStrings.cannotBeEmpty;
                       }
                       return null;
                     },
@@ -384,7 +384,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             if (gender == Gender.none) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Please select your gender'),
+                                  content:
+                                      Text(AppStrings.pleaseSelectYourGender),
                                 ),
                               );
                               return;
@@ -409,7 +410,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             dataPassed['title'] == 'edit'
                                 ? ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Updated Successfully'),
+                                      content:
+                                          Text(AppStrings.updatedSuccessfully),
                                     ),
                                   )
                                 :

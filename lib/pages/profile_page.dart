@@ -17,9 +17,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late String? imageId = '';
-  late String? userId = '';
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

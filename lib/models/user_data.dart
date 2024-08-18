@@ -7,6 +7,7 @@ class UserData {
   final String phone;
   final String id;
   final String? profilePicture;
+  final List<dynamic>? favoritePosts;
   final String? deviceToken;
   final bool? isOnline;
 
@@ -19,6 +20,7 @@ class UserData {
       required this.phone,
       required this.id,
       this.profilePicture,
+      this.favoritePosts,
       this.deviceToken,
       this.isOnline});
 
@@ -33,6 +35,7 @@ class UserData {
       gender: map['gender'] ?? '',
       phone: map['phone_number'] ?? '',
       id: map['id'] ?? '',
+      favoritePosts: map['favorite_posts'] ?? [],
       profilePicture: map['profile_picture'] ?? '',
       deviceToken: map['device_token'] ?? '',
       isOnline: map['is_online'] ?? false,
