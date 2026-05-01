@@ -37,7 +37,7 @@ dependencies:
   flutter_svg: ^2.0.10+1
   flutter_map: ^7.0.1
   latlng: ^2.0.7
-  latlong2: ^0.9.1
+  latlong2: ^0.10.0
   flutter_map_cancellable_tile_provider: ^3.0.0
   http: ^1.2.1
   appwrite: ^12.0.4
