@@ -1,4 +1,4 @@
-# chatacter
+# Chatacter App [Under Development]
 
 A new Flutter project.
 
